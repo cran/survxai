@@ -1,0 +1,118 @@
+---
+title: "Survival models - global explanations"
+author: "Alicja Gosiewska"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+vignette: >
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteIndexEntry{Survival models - global explanations}
+  %\usepackage[UTF-8]{inputenc}
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+# Introduction
+Package *survxai* contains functions for creating a unified representation of a survival models. Such representations can be further processed by various survival explainers. Tools implemented in *survxai* help to understand how input variables are used in the model and what impact do they have on final model prediction.
+
+The analyses carried out using this package can be divided into two parts: local analyses of new observations and global analyses showing the structures of survival models. This vignette describes local explanations.
+
+Methods and functions in  *survxai* package are based on [*DALEX* package](https://github.com/pbiecek/DALEX). 
+
+# Use case - data
+
+## Data set
+In our use case we will use the data from the Mayo Clinic trial in primary biliary cirrhosis (PBC) of the liver conducted between 1974 and 1984. A total of 424 PBC patients, referred to Mayo Clinic during that ten-year interval, met eligibility criteria for the randomized placebo controlled trial of the drug D-penicillamine. The
+first 312 cases in the data set participated in the randomized trial and contain largely complete data.
+The `pbc` data is included in the [*randomForestSRC* package](https://CRAN.R-project.org/package=randomForestSRC).
+```{r dataset}
+data(pbc, package = "randomForestSRC")
+pbc <- pbc[complete.cases(pbc),]
+
+head(pbc)
+```
+
+Our original data set contains only the numerical variables. 
+For this usecase we convert variables `sex` and `stage` to factor variables.
+
+```{r}
+pbc$sex <- as.factor(pbc$sex)
+pbc$stage <- as.factor(pbc$stage)
+```
+
+
+## Model
+We will create Cox proportional hazards model based on five variables from our data set: `age`, `treatment`, `status`, `sex` and `bili`.
+```{r, models}
+set.seed(1024)
+library(rms)
+library(survxai)
+
+pbc_smaller <- pbc[,c("days", "status", "treatment", "sex", "age", "bili", "stage")]
+pbc_smaller$years <- pbc_smaller$days/356
+pbc_smaller <- pbc_smaller[,-1]
+head(pbc_smaller)
+cph_model <- cph(Surv(years, status)~., data = pbc_smaller, surv = TRUE, x = TRUE, y=TRUE)
+```
+
+# Global explanations
+In this section we focus on explanations of the global and conditional model structure.
+
+## Explainers
+First, we have to create survival explainers - objects to wrap-up the black-box model with meta-data. Explainers unify model interfacing.
+
+Some models require custom predict function. Examples are in [Explainations of different survival models vignette](https://mi2datalab.github.io/survxai/articles/Custom_predict_for_survival_models.html).
+```{r, explainer}
+
+surve_cph <- explain(model = cph_model,
+                     data = pbc_smaller[,-c(1,7)], 
+                     y = Surv(pbc_smaller$years, pbc_smaller$status))
+print(surve_cph)
+```
+
+## Model performance
+Currently, in the *survxai* package is implemented only the `BS` type of model performance.
+In this metod for each time point we compute the prediction error for our model.
+```{r}
+mp_cph <- model_performance(surve_cph)
+print(mp_cph)
+```
+
+After creating the `surv_model_prediction` object we can visualize it in a very convinient way using the generic `plot()` function. 
+On our plot there are prediction error curves for model from the explainer.
+For more details about these curves see: [Mogensen, 2012](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4194196/)
+
+```{r}
+plot(mp_cph)
+```
+
+
+## Variable response
+Variable response explainers are designed to better understand the relation between a variable and a model output.
+These types of explainers are inspired among others by *pdp* package [Greenwell, 2017](https://journal.r-project.org/archive/2017/RJ-2017-016/index.html).
+```{r}
+vr_cph_sex <- variable_response(surve_cph, "sex")
+print(vr_cph_sex)
+vr_cph_bili <- variable_response(surve_cph, "bili")
+```
+
+
+After creating the `surv_variable_response` objects we can visualize them in a very convinient way using the generic `plot()` function.
+
+Variable response plots for survival models are survival curves conditioned by one variable. Each curve represent different value of chosen variable. For factor variables curves covers all possible values, for numeric variables values are divided into quantiles.
+
+Variable response plot illustrates how will the mean survival curve change along with the changing variable value.
+```{r}
+plot(vr_cph_sex)
+```
+
+```{r}
+plot(vr_cph_bili)
+```
