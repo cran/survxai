@@ -26,7 +26,7 @@ Package *survxai* contains functions for creating a unified representation of a 
 
 The analyses carried out using this package can be divided into two parts: local analyses of new observations and global analyses showing the structures of survival models. In this vignette we present both, global and local explanations. 
 
-Methods and functions in  *survxai* package are based on [*DALEX* package](https://github.com/pbiecek/DALEX). 
+Methods and functions in  *survxai* package are based on [*DALEX* package](https://github.com/ModelOriented/DALEX). 
 
 # Use case - data
 
@@ -75,7 +75,7 @@ Cox proportional hazards model is based on five variables: `age`, `treatment`, `
 ```{r, models}
 library(rms)
 
-cph_model <- cph(Surv(years, status)~., data = train, surv = TRUE, x = TRUE, y=TRUE)
+cph_model <- cph(Surv(years, status) ~  sex + bili + stage, data = train, surv = TRUE, x = TRUE, y=TRUE)
 ```
 
 ### Random Forests for Survival

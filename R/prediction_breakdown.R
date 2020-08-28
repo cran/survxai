@@ -1,13 +1,13 @@
 #' @title BreakDown for survival models
 #'
-#' @description Function \code{surv_breakdown} is an extension of a broken function from breakDown package. It computes the contribution in prediction for the variables in the model.
+#' @description Function \code{prediction_breakdown} is an extension of a broken function from breakDown package. It computes the contribution in prediction for the variables in the model.
 #' The contribution is defined as the difference between survival probabilities for model with added specific value of variable and with the random levels of this variable.
 #'
 #' @param explainer an object of the class 'surv_explainer'
 #' @param observation a new observation to explain
 #' @param time a time point at which variable contributions are computed. If NULL median time is taken.
 #' @param prob a survival probability at which variable contributions are computed
-#' @param ... other parameters
+#' @param ... other parameters corresponding to arguments from \code{\link[breakDown]{broken}} function from \code{breakDown} package. See https://github.com/pbiecek/breakDown/blob/master/R/break_agnostic.R for details
 #'
 #' @return An object of class surv_prediction_breakdown_explainer
 #'
@@ -24,8 +24,8 @@
 #'                   prob <- rms::survest(model, data, times = times)$surv
 #'                   return(prob)
 #'                   }
-#' cph_model <- cph(Surv(years, status)~., data=pbcTrain, surv=TRUE, x = TRUE, y=TRUE)
-#' surve_cph <- explain(model = cph_model, data = pbcTest[,-c(1,5)], 
+#' cph_model <- cph(Surv(years, status)~sex + bili + stage, data=pbcTrain, surv=TRUE, x = TRUE, y=TRUE)
+#' surve_cph <- explain(model = cph_model, data = pbcTest[,-c(1,5)],
 #'                     y = Surv(pbcTest$years, pbcTest$status), predict_function = predict_times)
 #' broken_prediction <- prediction_breakdown(surve_cph, pbcTest[1,-c(1,5)])
 #' }
@@ -45,11 +45,12 @@ prediction_breakdown <- function(explainer, observation, time = NULL, prob = NUL
   res<- broken(model = explainer$model,
                   new_observation = observation,
                   data = explainer$data,
-                  predict.function = new_pred)
+                  predict.function = new_pred,
+                  ...)
   options(warn = oldw)
 
   class(res) <- "data.frame"
-  
+
   intercept <- res$contribution[res$variable_name=="Intercept"]
   observ <- res$contribution[res$variable=="final_prognosis"]
 
@@ -91,34 +92,34 @@ prediction_breakdown <- function(explainer, observation, time = NULL, prob = NUL
 predict_fun <- function(prob, time, explainer){
   if (is.null(prob)) {
     if (is.null(time)) time <- median(explainer$times)
-    
+
     new_pred <- function(model, data){
       explainer$predict_function(model, data, times = time)
     }
   } else {
     times_sorted <- sort(explainer$times)
-    
+
     find_time <- function(x){
       tim <- (x < prob)
       index <- c(min(which(tim == TRUE)) -1, min(which(tim == TRUE)))
       closest_times <- times_sorted[index]
       weighted.mean(closest_times, x[index])
     }
-    
+
     new_pred <- function(model, data){
       probabilities <- explainer$predict_function(model, data, times = explainer$times)
       probabilities <- as.data.frame(probabilities)
-      
+
       res <- apply(probabilities, MARGIN = 1, FUN = find_time)
       res <- na.omit(res)
       return(res)
-      
+
     }
-    
+
     npred <- new_pred(explainer$model, explainer$data)
     message("Number of observations with prob > ", prob, ": ", nrow(explainer$data) - length(npred))
   }
-  
+
   return(new_pred)
 }
 

@@ -31,7 +31,6 @@
 #' \item \code{label} label, by default it's the last value from the \code{class} vector, but may be set to any character.
 #' }
 #'
-#' @rdname explain
 #' @importFrom stats predict model.frame
 #' @importFrom utils head tail
 #'
@@ -46,12 +45,16 @@
 #'                   prob <- rms::survest(model, data, times = times)$surv
 #'                   return(prob)
 #'                   }
-#' cph_model <- cph(Surv(days/365, status)~., data=pbc, surv=TRUE, x = TRUE, y=TRUE)
+#' cph_model <- cph(Surv(days/365, status)~ sex + bili + stage, data=pbc, surv=TRUE, x = TRUE, y=TRUE)
 #' surve_cph <- explain(model = cph_model, data = pbc[,-c(1,2)], y = Surv(pbc$days/365, pbc$status),
 #'              predict_function = predict_times)
 #' }
 #' @export
 
+explain  <- function(model, data = NULL, y, times = NULL, predict_function = yhat, link = I, label = tail(class(model), 1), ...) UseMethod("explain")
+
+#' @rdname explain
+#' @export
 explain.default <- function(model, data = NULL, y, times = NULL, predict_function = yhat, link = I, label = tail(class(model), 1), ...) {
   if (is.null(times)) times <- y[,1]
 
@@ -79,9 +82,6 @@ explain.default <- function(model, data = NULL, y, times = NULL, predict_functio
 }
 
 
-#' @export
-#' @rdname explain
-explain <- explain.default
 
 #' @method predictSurvProb surv_explainer
 #' @export

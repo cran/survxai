@@ -24,7 +24,7 @@ Package *survxai* contains functions for creating a unified representation of a 
 
 The analyses carried out using this package can be divided into two parts: local analyses of new observations and global analyses showing the structures of survival models. This vignette describes local explanations.
 
-Methods and functions in  *survxai* package are based on [*DALEX* package](https://github.com/pbiecek/DALEX). 
+Methods and functions in  *survxai* package are based on [*DALEX* package](https://github.com/ModelOriented/DALEX). 
 
 # Use case - data
 
@@ -58,7 +58,7 @@ library(survxai)
 pbc_smaller <- pbc[,c("days", "status", "treatment", "sex", "age", "bili", "stage")]
 head(pbc_smaller)
 
-cph_model <- cph(Surv(days/365, status)~. , data = pbc_smaller, surv = TRUE, x = TRUE, y=TRUE)
+cph_model <- cph(Surv(days/365, status) ~ treatment + sex + age + bili + stage , data = pbc_smaller, surv = TRUE, x = TRUE, y=TRUE)
 ```
 
 # Local explanations

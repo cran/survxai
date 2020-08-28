@@ -1,24 +1,24 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
                       warning = FALSE)
 
-## ----dataset-------------------------------------------------------------
+## ----dataset------------------------------------------------------------------
 data(pbc, package = "randomForestSRC")
 pbc <- pbc[complete.cases(pbc),]
 pbc$sex <- as.factor(pbc$sex)
 pbc$stage <- as.factor(pbc$stage)
 
-## ---- models-------------------------------------------------------------
+## ---- models------------------------------------------------------------------
 set.seed(1024)
 library(rms)
 library(survxai)
-cph_model <- cph(Surv(days/365, status)~., data = pbc, surv = TRUE, x = TRUE, y=TRUE)
+cph_model <- cph(Surv(days/365, status) ~ treatment + age + sex + ascites + hepatom + spiders + edema + bili + chol + albumin + copper + alk + sgot + trig + platelet + prothrombin + stage , data = pbc, surv = TRUE, x = TRUE, y=TRUE)
 
 surve_cph <- explain(model = cph_model,
                      data = pbc[,-c(1,2)], y = Surv(pbc$days/365, pbc$status))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(prodlim)
 library(randomForestSRC)
 
@@ -32,7 +32,7 @@ predict_rf <- function(object, newdata, times, ...){
   return(p)
 }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 pbc$year <- pbc$days/365
 rf_model <- rfsrc(Surv(year, status)~., data = pbc[,-1])
 
@@ -40,7 +40,7 @@ surve_rf <- explain(model = rf_model,
                     data = pbc[,-c(1,2,20)], y = Surv(pbc$year, pbc$status),
                     predict_function = predict_rf)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(survival)
 
 predict_reg <- function(model, newdata, times){
@@ -59,7 +59,7 @@ predict_reg <- function(model, newdata, times){
 }
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 reg_model <- survreg(Surv(year, status)~., data = pbc[,-1], x = TRUE)
 
 surve_reg <- explain(model = rf_model,

@@ -4,13 +4,12 @@
 \alias{print.surv_prediction_breakdown_explainer}
 \title{Prediction Breakdown Print}
 \usage{
-\method{print}{surv_prediction_breakdown_explainer}(x, ..., digits = 3,
-  rounding_function = round)
+\method{print}{surv_prediction_breakdown_explainer}(x, ..., digits = 3, rounding_function = round)
 }
 \arguments{
 \item{x}{the model model of 'surv_prediction_breakdown_explainer' class}
 
-\item{...}{other parameters}
+\item{...}{further arguments passed to or from other methods}
 
 \item{digits}{number of decimal places (round) or significant digits (signif) to be used
 See the \code{rounding_function} argument}

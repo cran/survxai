@@ -4,22 +4,20 @@
 \alias{model_performance}
 \title{Model performance for survival models}
 \usage{
-model_performance(explainer, type = "BS", ...)
+model_performance(explainer, type = "BS")
 }
 \arguments{
 \item{explainer}{a model to be explained, preprocessed by the 'survxai::explain' function}
 
 \item{type}{character - type of the response to be calculated
 Currently following options are implemented: 'BS' for Expected Brier Score}
-
-\item{...}{other parameters}
 }
 \description{
 Function \code{model_performance} calculates the prediction error for chosen survival model.
 }
 \details{
-For \code{type = "BS"} prediction error is the time dependent estimates of the population average Brier score. 
-At a given time point t, the Brier score for a single observation is the squared difference between observed survival status 
+For \code{type = "BS"} prediction error is the time dependent estimates of the population average Brier score.
+At a given time point t, the Brier score for a single observation is the squared difference between observed survival status
 and a model based prediction of surviving time t.
 }
 \examples{
@@ -28,8 +26,9 @@ and a model based prediction of surviving time t.
    library(rms)
    data("pbcTrain")
    data("pbcTest")
-   cph_model <- cph(Surv(years, status)~., data=pbcTrain, surv=TRUE, x = TRUE, y=TRUE)
-   surve_cph <- explain(model = cph_model, data = pbcTest[,-c(1,5)], 
+   cph_model <- cph(Surv(years, status)~ sex + bili + stage,
+     data=pbcTrain, surv=TRUE, x = TRUE, y=TRUE)
+   surve_cph <- explain(model = cph_model, data = pbcTest[,-c(1,5)],
                         y = Surv(pbcTest$years, pbcTest$status))
    mp_cph <- model_performance(surve_cph)
 }

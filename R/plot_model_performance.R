@@ -3,7 +3,7 @@
 #' @description Function plot for surv_model_performance object.
 #'
 #' @param x object of class "surv_model_performance"
-#' @param ... other arguments
+#' @param ... optional, additional objects of class "surv_model_performance_explainer"
 #'
 #' @import ggplot2
 #'
@@ -17,10 +17,10 @@
 #'                   prob <- rms::survest(model, data, times = times)$surv
 #'                   return(prob)
 #'                   }
-#' cph_model <- cph(Surv(years, status)~., data=pbcTrain, surv=TRUE, x = TRUE, y=TRUE)
-#'surve_cph <- explain(model = cph_model, data = pbcTest[,-c(1,5)], 
+#' cph_model <- cph(Surv(years, status)~sex + bili + stage, data=pbcTrain, surv=TRUE, x = TRUE, y=TRUE)
+#'surve_cph <- explain(model = cph_model, data = pbcTest[,-c(1,5)],
 #'                     y = Surv(pbcTest$years, pbcTest$status), predict_function = predict_times)
-#' mp_cph <- model_performance(surve_cph, data = pbcTest)
+#' mp_cph <- model_performance(surve_cph)
 #' plot(mp_cph)
 #' }
 #'
